@@ -1,11 +1,11 @@
 import { destroyCookie } from 'nookies';
-import React, { useContext, useState, createContext } from 'react';
+import React, { useContext, createContext } from 'react';
 
 import api from 'services/api';
 
 import UserService from 'services/UserService';
 
-import User from '../interfaces/User';
+import User from 'interfaces/Auth';
 
 interface ILoginRequest {
     email: string;
@@ -21,7 +21,7 @@ interface AuthContextData {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider: React.FC = ({ children }) => {
-    const [user, setUser] = useState({} as User);
+    const user = {} as User;
 
     const login = async (data: ILoginRequest) => {
         try {
@@ -31,7 +31,7 @@ export const AuthProvider: React.FC = ({ children }) => {
                 Authorization: `Bearer ${response.token}`
             };
 
-            setUser(response.user);
+            // setUser(response.administrator);
         } catch (error) {
             // Errors handling
         }

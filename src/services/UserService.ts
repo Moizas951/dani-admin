@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios';
 
-import User from 'interfaces/User';
+import AuthResponse, { User } from 'interfaces/Auth';
 import { setCookie } from 'nookies';
 
 import api from './api';
@@ -10,20 +10,27 @@ interface ILoginRequest {
     password: string;
 }
 
-interface ILoginResponse {
-    token: string;
-    user: User;
-}
-
 export default class UserService {
-    static async login(data: ILoginRequest): Promise<ILoginResponse> {
-        const response: AxiosResponse<ILoginResponse> = await api.post(
-            '/session/login',
+    static async login(data: ILoginRequest): Promise<AuthResponse> {
+        const response: AxiosResponse<AuthResponse> = await api.post(
+            '/auth/login',
             data
         );
 
         setCookie(undefined, '@app:token', response.data.token);
-        setCookie(undefined, '@app:useId', response.data.user.id);
+        if (response.data.administrator) {
+            setCookie(undefined, '@app:userId', response.data.administrator.id);
+            setCookie(undefined, '@app:userType', 'adm');
+        } else if (response.data.company) {
+            setCookie(undefined, '@app:userId', response.data.company.id);
+            setCookie(undefined, '@app:userType', 'company');
+        }
+
+        return response.data;
+    }
+
+    static async GetAll(): Promise<User[]> {
+        const response: AxiosResponse<User[]> = await api.get('/readAll');
 
         return response.data;
     }
