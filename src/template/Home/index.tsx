@@ -13,7 +13,7 @@ import { parseCookies } from 'nookies';
 import MenuCompanyComponent from 'components/MenuCompanyComponent';
 import PlansComponent from 'components/PlansComponent';
 import AnwserQuestion from 'components/CreatePostComponent';
-import CreateArticlePage from 'components/CouponsComponent';
+import CreateArticlePage from 'components/CreateArticle';
 
 const { Header, Sider, Content } = Layout;
 

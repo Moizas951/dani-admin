@@ -8,19 +8,22 @@ import {
     Tooltip,
     Row,
     Col,
-    message
+    message,
+    Select
 } from 'antd';
 import { UserOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import moment from 'moment';
 
 interface Article {
+    id: string;
     autorId: string;
     title: string;
     text: string;
     autorName: string;
     autorImg: string;
-    createdAt?: string;
+    dataCriacao?: string;
+    categoria: string;
 }
 
 const CreateArticlePage: React.FC = () => {
@@ -28,45 +31,58 @@ const CreateArticlePage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
-    // Função para buscar artigos ao carregar a página
     useEffect(() => {
         const fetchArticles = async () => {
             try {
                 const response = await axios.get(
                     'https://dani.polijrinternal.com/artigos/readAll'
-                ); // Fetch all articles
+                );
                 setArticles(response.data);
             } catch (error) {
-                console.error('Erro ao buscar artigos:', error);
+                if (axios.isAxiosError(error)) {
+                    message.error(`Erro ao buscar artigos: ${error.message}`);
+                } else {
+                    message.error('Erro ao buscar artigos.');
+                }
+                message.error('Erro ao buscar artigos.');
             }
         };
         fetchArticles();
     }, []);
 
-    // Função chamada ao submeter o formulário
     const onFinish = async (values: {
         title: string;
         text: string;
         autorImg?: string;
+        categoria: string;
     }) => {
         setLoading(true);
 
         const newArticle: Article = {
-            autorId: 'd9aa4869-9dbe-4fed-a548-be45d3c6b312',
+            id: `${Date.now()}`, // or use UUID for unique key
+            autorId: '181b02cc-df87-477d-8798-60892a58e809',
             title: values.title,
             text: values.text,
             autorName: 'Doutor',
             autorImg: values.autorImg || 'https://via.placeholder.com/150',
-            createdAt: moment().format('DD/MM/YYYY HH:mm')
+            dataCriacao: moment().format('DD/MM/YYYY HH:mm'),
+            categoria: values.categoria
         };
 
         try {
-            await axios.post('/artigos/create', newArticle); // Send POST request to create a new article
-            setArticles((prevArticles) => [...prevArticles, newArticle]); // Update articles state
+            await axios.post(
+                'https://dani.polijrinternal.com/artigos/create',
+                newArticle
+            );
+            setArticles((prevArticles) => [...prevArticles, newArticle]);
             form.resetFields();
             message.success('Artigo criado com sucesso!');
         } catch (error) {
-            console.error('Erro ao criar o artigo:', error);
+            if (axios.isAxiosError(error)) {
+                message.error(`Erro ao criar o artigo: ${error.message}`);
+            } else {
+                message.error('Erro ao criar o artigo. Tente novamente.');
+            }
             message.error('Erro ao criar o artigo. Tente novamente.');
         } finally {
             setLoading(false);
@@ -77,7 +93,6 @@ const CreateArticlePage: React.FC = () => {
         <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
             <h2 style={{ textAlign: 'center' }}>Criar um novo artigo</h2>
 
-            {/* Formulário para criar o artigo */}
             <Card
                 title="Novo Artigo"
                 style={{ marginBottom: 24 }}
@@ -133,24 +148,43 @@ const CreateArticlePage: React.FC = () => {
                     <Form.Item name="autorImg" label="URL da imagem do autor">
                         <Input placeholder="Insira a URL da imagem do autor (opcional)" />
                     </Form.Item>
+
+                    <Form.Item
+                        name="categoria"
+                        label="Categoria"
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Por favor, selecione uma categoria'
+                            }
+                        ]}
+                    >
+                        <Select placeholder="Selecione a categoria">
+                            <Select.Option value="Artigo">Artigo</Select.Option>
+                            <Select.Option value="Possibilidades">
+                                Possibilidades
+                            </Select.Option>
+                            <Select.Option value="Guia">Guia</Select.Option>
+                        </Select>
+                    </Form.Item>
                 </Form>
             </Card>
 
-            {/* Exibir artigos criados */}
             <h3>Artigos Criados</h3>
             {articles.length === 0 ? (
                 <p>Nenhum artigo foi criado ainda.</p>
             ) : (
                 <Row gutter={[16, 16]}>
                     {articles.map((article) => (
-                        <Col span={24} key={article.autorId}>
+                        <Col xs={24} sm={12} md={8} lg={6} key={article.id}>
                             <Card
                                 hoverable
                                 title={article.title}
                                 extra={
                                     <Tooltip
                                         title={`Criado em ${
-                                            article.createdAt || 'desconhecido'
+                                            article.dataCriacao ||
+                                            'desconhecido'
                                         }`}
                                     >
                                         <Avatar
@@ -168,8 +202,12 @@ const CreateArticlePage: React.FC = () => {
                                 />
                                 <div style={{ marginTop: 10 }}>
                                     <small>
-                                        {article.createdAt &&
-                                            `Publicado em: ${article.createdAt}`}
+                                        {article.dataCriacao &&
+                                            `Publicado em: ${article.dataCriacao}`}
+                                    </small>
+                                    <br />
+                                    <small>
+                                        Categoria: {article.categoria}
                                     </small>
                                 </div>
                             </Card>
